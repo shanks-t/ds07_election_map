@@ -1,0 +1,65 @@
+name: Deploy to ECS with Terraform
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Docker Image Version'     
+        required: true
+        default: ''
+
+permissions:
+      id-token: write # This is required for requesting the JWT
+      contents: read  # This is required for actions/checkout
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: "us-east-1"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+        role-session-name: plotly-ecr
+        role-duration-seconds: 1200
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.4.0
+
+    - name: Terraform fmt
+      run: |
+        cd infra 
+        terraform fmt
+
+    - name: Terraform Init
+      run: |
+        cd infra
+        terraform init
+    
+    - name: Terraform Validate
+      run: |
+        cd infra 
+        terraform validate
+
+    - name: Terraform Plan
+      run: |
+        cd infra 
+        terraform plan -var="IMAGE_TAG=${{ github.event.inputs.version }}"
+
+    - name: Terraform Apply
+      run: |
+        cd infra 
+        echo "${{ github.event.inputs.version }}" 
+        terraform apply -var="IMAGE_TAG=${{ github.event.inputs.version }}" -auto-approve
+
+
