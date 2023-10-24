@@ -182,6 +182,15 @@ resource "aws_lb_target_group" "this" {
   vpc_id      = resource.aws_vpc.this.id
 
   depends_on = [resource.aws_lb.this]
+  # Health check settings
+  health_check {
+    interval            = 300   # Time between health checks
+    path                = "/"  # URL path to use for health checks
+    timeout             = 100   # Amount of time during which no response means a failed health check
+    healthy_threshold   =3    # Number of consecutive successful health checks before marking as healthy
+    unhealthy_threshold = 2    # Number of consecutive failed health checks before marking as unhealthy
+    matcher             = "200-299"
+  }
 }
 resource "aws_lb_listener" "this" {
   load_balancer_arn = resource.aws_lb.this.arn
