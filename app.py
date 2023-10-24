@@ -8,7 +8,6 @@ import json
 import numpy as np
 import plotly.graph_objects as go
 
-map_box_access_token = "pk.eyJ1Ijoic2hhbmtzLXQiLCJhIjoiY2xvMzl2aDFkMGcxbjJpbW5mcnZhNDd4dSJ9.BUHTrMtgxWdtNy78qm98KQ"
 
 DEFAULT_COLORSCALE = [
     "#f2fffb",
@@ -86,5 +85,4 @@ app.layout = html.Div([
     dcc.Graph(figure=fig, style={'height': '80vh', 'width': '100%'})
 ])
 
-if __name__ == '__main__':
-    app.run_server(debug=True)
+server = app.server
