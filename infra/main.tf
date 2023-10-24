@@ -236,10 +236,10 @@ resource "aws_ecs_task_definition" "this" {
       }
     }
   }])
-  cpu                      = 2048
+  cpu                      = 4096
   execution_role_arn       = aws_iam_role.this.arn
   family                   = "family-of-${local.example}-tasks"
-  memory                   = 4096
+  memory                   = 8192
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   runtime_platform {
