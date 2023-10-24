@@ -21,4 +21,3 @@ COPY app.py /app
 
 # Command to run the application
 CMD ["gunicorn", "app:server", "-w", "1", "-t", "120", "-b", "0.0.0.0:8080"]
-
