@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y build-essential gcc g++ python3-dev
 # Install required packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./data /app/data
+COPY ./data/merged_gdf.parquet /app/data/
 
 # Copy the application to the image's workdir
 COPY app.py /app

@@ -7,6 +7,8 @@ import plotly.express as px
 import json
 import numpy as np
 import plotly.graph_objects as go
+from shapely import wkb
+
 
 
 DEFAULT_COLORSCALE = [
@@ -28,36 +30,44 @@ DEFAULT_COLORSCALE = [
     "#10523e",
 ]
 
-# Read in the data
-df_election = pd.read_csv('./data/fips_df.csv')
-gdf = gpd.read_file('./data/Congressional_Districts.geojson')  # replace with your geojson file path
+# # Read in the data
+# df_election = pd.read_csv('./data/fips_df.csv')
+# gdf = gpd.read_file('./data/Congressional_Districts.geojson')  # replace with your geojson file path
 
-# Convert all Timestamp objects to strings
-gdf = gdf.map(lambda x: str(x) if isinstance(x, pd.Timestamp) else x)
+# # Convert all Timestamp objects to strings
+# gdf = gdf.map(lambda x: str(x) if isinstance(x, pd.Timestamp) else x)
 
-# ...Data Processing...
-# Update '00' districts to '01' in GeoJSON data
-gdf['DISTRICT'] = gdf['DISTRICT'].replace('00', '01')
-df_election['District'] = df_election['District'].apply(lambda x: str(x).zfill(2))
+# # ...Data Processing...
+# # Update '00' districts to '01' in GeoJSON data
+# gdf['DISTRICT'] = gdf['DISTRICT'].replace('00', '01')
+# df_election['District'] = df_election['District'].apply(lambda x: str(x).zfill(2))
 
-# Convert the STATEFP20 columns to string in both DataFrames
-gdf['STATEFP20'] = gdf['STATEFP20'].astype(str).str.zfill(2)
-df_election['STATEFP20'] = df_election['STATEFP20'].astype(str).str.zfill(2)
+# # Convert the STATEFP20 columns to string in both DataFrames
+# gdf['STATEFP20'] = gdf['STATEFP20'].astype(str).str.zfill(2)
+# df_election['STATEFP20'] = df_election['STATEFP20'].astype(str).str.zfill(2)
 
-# Convert STATEFP20 columns to string
-gdf['STATEFP20'] = gdf['STATEFP20'].astype(str)
-df_election['STATEFP20'] = df_election['STATEFP20'].astype(str)
-gdf['DISTRICT'] = gdf['DISTRICT'].astype(str)
-df_election['District'] = df_election['District'].astype(str)
+# # Convert STATEFP20 columns to string
+# gdf['STATEFP20'] = gdf['STATEFP20'].astype(str)
+# df_election['STATEFP20'] = df_election['STATEFP20'].astype(str)
+# gdf['DISTRICT'] = gdf['DISTRICT'].astype(str)
+# df_election['District'] = df_election['District'].astype(str)
 
 
-# Remove any leading or trailing whitespace
-gdf['DISTRICT'] = gdf['DISTRICT'].str.strip()
-df_election['District'] = df_election['District'].str.strip()
+# # Remove any leading or trailing whitespace
+# gdf['DISTRICT'] = gdf['DISTRICT'].str.strip()
+# df_election['District'] = df_election['District'].str.strip()
 
-merged_gdf = gdf.merge(df_election, left_on=['STATEFP20', 'DISTRICT'], right_on=['STATEFP20', 'District'], how='left')
+merged_gdf = pd.read_parquet('./data/merged_gdf.parquet')
 
-geojson = json.loads(merged_gdf.to_json())
+# Convert the binary 'geometry' column back to shapely geometry
+merged_gdf['geometry'] = merged_gdf['geometry'].apply(wkb.loads)
+
+# Convert back to a GeoDataFrame
+gdf = gpd.GeoDataFrame(merged_gdf, geometry='geometry')
+gdf['geometry'] = gdf['geometry'].simplify(tolerance=0.001)
+
+geojson_str = gdf.to_json()
+geojson = json.loads(geojson_str)
 
 # Use Choroplethmapbox for simplicity
 fig = go.Figure(go.Choroplethmapbox(
@@ -86,3 +96,4 @@ app.layout = html.Div([
 ])
 
 server = app.server
+
