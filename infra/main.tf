@@ -244,6 +244,7 @@ resource "aws_ecs_task_definition" "this" {
   requires_compatibilities = ["FARGATE"]
   runtime_platform {
     operating_system_family = "LINUX"
+    cpu_architecture = "ARM64"
   }
 }
 
