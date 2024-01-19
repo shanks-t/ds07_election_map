@@ -6,7 +6,7 @@
 terraform {
   required_version = "~> 1.4"
   backend "s3" {
-    bucket = "plotly-ds07"
+    bucket = "shiny-ds07"
     key    = "state/terraform.tfstate"
     region = "us-east-1"
   }
@@ -18,16 +18,18 @@ terraform {
 }
 
 locals {
-  container_name = "plotly"
+  container_name = "shiny"
   container_port = 8080 # ! Must be same EXPOSED port from our Dockerfile
-  example        = "plotly-example"
-  image_uri      = "127293717875.dkr.ecr.us-east-1.amazonaws.com/election-map"
+  example        = "shiny-example"
+  image_uri      = "127293717875.dkr.ecr.us-east-1.amazonaws.com/shiny"
 }
 
-variable "IMAGE_TAG" {}
+variable "IMAGE_TAG" {
+  default = "latest"
+}
 
 provider "aws" {
-  region = "us-east-1" 
+  region = "us-east-1"
 
   default_tags {
     tags = { example = local.example }
@@ -184,11 +186,11 @@ resource "aws_lb_target_group" "this" {
   depends_on = [resource.aws_lb.this]
   # Health check settings
   health_check {
-    interval            = 300   # Time between health checks
-    path                = "/"  # URL path to use for health checks
-    timeout             = 100   # Amount of time during which no response means a failed health check
-    healthy_threshold   =3    # Number of consecutive successful health checks before marking as healthy
-    unhealthy_threshold = 2    # Number of consecutive failed health checks before marking as unhealthy
+    interval            = 300 # Time between health checks
+    path                = "/" # URL path to use for health checks
+    timeout             = 100 # Amount of time during which no response means a failed health check
+    healthy_threshold   = 3   # Number of consecutive successful health checks before marking as healthy
+    unhealthy_threshold = 2   # Number of consecutive failed health checks before marking as unhealthy
     matcher             = "200-299"
   }
 }
@@ -239,21 +241,21 @@ resource "aws_ecs_task_definition" "this" {
     logConfiguration = {
       logDriver = "awslogs",
       options = {
-        "awslogs-region"        = "us-east-1", 
-        "awslogs-group"         = "plotly",     
+        "awslogs-region"        = "us-east-1",
+        "awslogs-group"         = "shiny",
         "awslogs-stream-prefix" = "ecs"
       }
     }
   }])
-  cpu                      = 4096
+  cpu                      = 256
   execution_role_arn       = aws_iam_role.this.arn
   family                   = "family-of-${local.example}-tasks"
-  memory                   = 8192
+  memory                   = 512
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   runtime_platform {
     operating_system_family = "LINUX"
-    cpu_architecture = "ARM64"
+    cpu_architecture        = "X86_64"
   }
 }
 
