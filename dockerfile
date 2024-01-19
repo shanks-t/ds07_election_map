@@ -14,10 +14,10 @@ RUN apt-get update && apt-get install -y build-essential gcc g++ python3-dev
 # Install required packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY ./data /app/data
+COPY ./data/merged_gdf.parquet /app/data/
 
 # Copy the application to the image's workdir
 COPY app.py /app
 
 # Command to run the application
-CMD ["gunicorn", "app:server", "-w", "1", "-t", "120", "-b", "0.0.0.0:8080"]
+CMD ["gunicorn", "app:server", "-w", "1", "-t", "300", "-b", "0.0.0.0:8080"]
